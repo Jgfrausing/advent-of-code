@@ -4,19 +4,31 @@ import Data.List (sort)
 import qualified Data.Bifunctor
 
 main :: IO ()
-main = do
-    putStrLn "Hello, Haskell!"
-    tuples <- getTuples "list.txt"
+main = task2 "list.txt"
+
+task2 file = do
+    tuples <- getTuples file 
 
     let asDigits = apply convertToDigits tuples
-    let zipped = uncurry zip . Data.Bifunctor.bimap sort sort . unzip $ asDigits
+    let (a, b) = unzip asDigits
 
-    let summed = sum $ map (\(x, y) -> abs (x - y)) zipped
+    let score = sum $ map (\x -> x * length (filter (==x) b)) a
 
-    print summed
+    print score 
 
 
-apply :: (a -> b) -> [(a, a)] -> [(b, b)]
+
+task1 file = do
+    tuples <- getTuples file
+
+    let asDigits = apply convertToDigits tuples
+    let sorted = uncurry zip . Data.Bifunctor.bimap sort sort . unzip $ asDigits
+
+    let difference = sum $ map (\(x, y) -> abs (x - y)) sorted
+
+    print difference 
+
+
 apply f = map (Data.Bifunctor.bimap f f)
 
 convertToDigits s = read s :: Int
