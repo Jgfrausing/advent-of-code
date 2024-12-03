@@ -1,17 +1,15 @@
 module Main where
 
-import Data.List (sort)
+import Data.List (sort, transpose)
 import qualified Data.Bifunctor
 import Control.Exception (try)
 
 main :: IO ()
-main = task1 "reports.txt"
-
+main = task2 "reports.txt"
 
 
 task1 file = do
     reports <- getData file
-
 
     let increased = map tryMakeIncreasing reports
     let valid = filter reportIsValid increased
@@ -19,12 +17,44 @@ task1 file = do
     print $ length valid
 
 
+task2 file = do
+    reports <- getData file
+    let reportsRevered = map reverse reports
+
+    let validIncreasing= map reportIsValidWithDamper reports
+    let validDecreasing= map reportIsValidWithDamper reportsRevered
+
+    let zipped = zip validIncreasing validDecreasing
+
+    let valid = filter (uncurry (||)) zipped
+
+    print $ length valid
+
+
 tryMakeIncreasing [] = []
 tryMakeIncreasing [x] = [x]
 tryMakeIncreasing (x:xs) =
-    if x > head xs then reverse (x:xs)
+    let ii = head xs in
+    if x > ii then reverse (x:xs)
     else x:xs
 
+reportIsValidWithDamper x = reportIsValidWithDamper_ (x, False) || reportIsValidWithDamper_ (tail x, True)
+
+reportIsValidWithDamper_ ([], damperRemoved)  = True
+reportIsValidWithDamper_ ([x], damperRemoved) = True
+reportIsValidWithDamper_ (x:xs, False) = 
+    let next = head xs in
+    let valid = x < next && next <= 3 + x in
+    
+    if valid then reportIsValidWithDamper_ (xs, False)
+       else let new = x : tail xs in reportIsValidWithDamper_ (new, True) 
+reportIsValidWithDamper_ (x:xs, True) =
+    let next = head xs in
+    let valid = x < next && next <= 3 + x in
+    valid && reportIsValidWithDamper_ (xs, True)
+
+
+reportIsValid :: (Ord a, Num a) => [a] -> Bool
 reportIsValid [] = True
 reportIsValid [x] = True
 reportIsValid (x:xs) =
